@@ -1,4 +1,5 @@
 from django.db import models
+from serial.tools.list_ports import comports
 
 
 # class MachineType(models.Model):
@@ -7,10 +8,12 @@ from django.db import models
 
 
 def get_serial_ports():
-    return (
-        ('value1', 'name1'),
-        ('value2', 'name2'),
-    )
+    comport_choices = []
+    for port, desc, hwid in comports():
+        device_name = desc
+        comport_choices.append([port, device_name])
+
+    return comport_choices
 
 
 class Machine(models.Model):
@@ -18,8 +21,8 @@ class Machine(models.Model):
     WORK_STATUS_BUSY = 2
     WORK_STATUS_REPAIR = 3
     WORK_STATUS_CHOICES = (
-        (WORK_STATUS_READY_TO_MAKE, 'Готово к изготовлению'),
-        (WORK_STATUS_BUSY, 'Изготовление ресурса'),
+        (WORK_STATUS_READY_TO_MAKE, 'Готов к работе'),
+        (WORK_STATUS_BUSY, 'Занят'),
         (WORK_STATUS_REPAIR, 'На тех. обслуживании'),
     )
     work_status = models.IntegerField('Статус станка', choices=WORK_STATUS_CHOICES, default=WORK_STATUS_READY_TO_MAKE)

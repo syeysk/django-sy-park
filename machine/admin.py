@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.forms import ModelForm, Textarea, Select
+from django.forms import ModelForm, Select
 
 from machine.models import Machine, Resource, get_serial_ports
 
@@ -14,6 +14,10 @@ class MachineAdmin(admin.ModelAdmin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def get_form(self, *args, **kwargs):
+        self.form.Meta.widgets['serial_port'] = Select(choices=get_serial_ports())
+        return super().get_form(*args, **kwargs)
 
     list_display = ('id', 'title', 'serial_port', 'external_fabric_id')
     readonly_fields = ('external_fabric_id',)
