@@ -1,0 +1,4 @@
+django==4.2.1
+djangorestframework==3.14.0
+django-environ==0.10.0
+git+https://github.com/syeysk/sy_api.git
