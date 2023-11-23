@@ -6,6 +6,12 @@ from serial.tools.list_ports import comports
 #     title = models.CharField('Название типа', max_length=25)
 #     technology_type = models.IntegerField('Тип технологии производства (аддитивная, сабстрактивая, смешанная, манпуляция)')
 
+BAUDRATES = (
+    50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800,
+    500000, 576000, 921600, 1000000, 1152000, 1500000, 2000000, 2500000, 3000000, 3500000, 4000000,
+)
+BAUDRATES_CHOICES = [(baudrate, str(baudrate)) for baudrate in BAUDRATES]
+
 
 def get_serial_ports():
     comport_choices = []
@@ -30,6 +36,9 @@ class Machine(models.Model):
     external_fabric_id = models.IntegerField('Идентификатор машины как фабрики', null=True)
     # machine_type = models.ForeignKey(MachineType)
     serial_port = models.CharField('Последовательный порт', max_length=50)
+    port_baudrate = models.IntegerField('Битрейт порта', null=False, default=115200, choices=BAUDRATES_CHOICES)
+    port_read_timeout = models.FloatField('Таймаут на чтение из порта', null=False, default=1)
+    port_write_timeout = models.FloatField('Таймаут на запись в порт', null=False, default=1)
 
     def __str__(self):
         return self.title

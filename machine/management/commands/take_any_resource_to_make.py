@@ -1,12 +1,39 @@
+import serial
 import syapi
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from machine.models import Machine, Resource
+from machine.models import Machine, Resource, BAUDRATES
 
 
-def start_making_resource(machine, resource):
+def guess_baudrate(machine):
+    gcode = 'G0 X0\n'.encode()
+    success_answer = 'ok\n'.encode()
+    for baudrate_to_check in BAUDRATES[10:27]:
+        with serial.Serial(
+                machine.serial_port,
+                baudrate=baudrate_to_check,
+                timeout=0.1,
+                write_timeout=0.1,
+        ) as opened_serial:
+            opened_serial.write(gcode)
+            answer = opened_serial.read(100)
+            if answer.endswith(success_answer):
+                return baudrate_to_check
+
+
+def start_making_resource(machine: Machine, resource: Resource):
     success_started = True
+    print(guess_baudrate(machine))
+    with serial.Serial(
+            machine.serial_port,
+            baudrate=machine.port_baudrate,
+            timeout=machine.port_read_timeout,
+            write_timeout=machine.port_write_timeout,
+    ) as opened_serial:
+        opened_serial.write('G0 X10 Y10 Z10\n'.encode())
+        print(opened_serial.read(100))
+
     return success_started
 
 
@@ -18,7 +45,7 @@ class Command(BaseCommand):
         api_resource = syapi.Resource(token=settings.USER_TOKENS['resource'], url=url_resource)
         api_fabric = syapi.Fabric(token=settings.USER_TOKENS['resource'], url=url_resource)
 
-        machines = Machine.objects.filter(serial_port__null=False, work_status=Machine.WORK_STATUS_READY_TO_MAKE)
+        machines = Machine.objects.filter(serial_port__isnull=False, work_status=Machine.WORK_STATUS_READY_TO_MAKE)
         for machine in machines:
             if not machine.external_fabric_id:
                 external_fabric_data = api_fabric.create(title=machine.title)
@@ -33,4 +60,4 @@ class Command(BaseCommand):
                 # TODO: залогировать причину незапуска изготовления ресурса
                 # TODO: послать микросервису ресурсов запрос об отмене изготовления, передав причину
 
-            resource.save()
+            # resource.save()
