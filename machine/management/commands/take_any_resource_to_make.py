@@ -24,7 +24,6 @@ def guess_baudrate(machine):
 
 def start_making_resource(machine: Machine, resource: Resource):
     success_started = True
-    print(guess_baudrate(machine))
     with serial.Serial(
             machine.serial_port,
             baudrate=machine.port_baudrate,
